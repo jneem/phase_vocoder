@@ -1,0 +1,15 @@
+[package]
+name = "phase_vocoder"
+version = "0.1.0"
+authors = ["Joe Neeman <joeneeman@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+apodize = "1.0.0"
+rustfft = "3.0.1"
+
+[dev-dependencies]
+hound = "3.4.0"
+clap = "2.33.0"

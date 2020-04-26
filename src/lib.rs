@@ -24,7 +24,7 @@ impl Synthesis {
         Synthesis {
             output: VecDeque::new(),
             pos: 0,
-            hop_size: ((HOP_SIZE as f32) * factor) as usize,
+            hop_size: ((HOP_SIZE as f32) / factor) as usize,
             fft: FFTplanner::new(true),
             fft_input: vec![0.0.into(); WINDOW_SIZE],
             fft_output: vec![0.0.into(); WINDOW_SIZE],
@@ -32,6 +32,12 @@ impl Synthesis {
                 .map(|x| x as f32)
                 .collect(),
         }
+    }
+
+    pub fn reset(&mut self, factor: f32) {
+        self.output.clear();
+        self.pos = 0;
+        self.hop_size = ((HOP_SIZE as f32) / factor) as usize;
     }
 
     pub fn advance(&mut self, phase: &[f32], mag: &[f32]) {
@@ -93,6 +99,20 @@ impl Analysis {
         }
     }
 
+    pub fn reset(&mut self, factor: f32) {
+        for x in &mut self.accumulated_phase {
+            *x = 0.0;
+        }
+        for x in &mut self.cur_phase {
+            *x = 0.0;
+        }
+        self.peaks.clear();
+        for i in 0..(WINDOW_SIZE / 2) {
+            self.peaks.push(i);
+        }
+        self.factor = factor;
+    }
+
     fn find_peaks(&mut self) {
         // FIXME: what's a good threshold value?
         const THRESHOLD: f32 = 150.0;
@@ -130,7 +150,7 @@ impl Analysis {
         for &idx in &self.peaks {
             let cur_phase = self.cur_phase[idx];
             let last_phase = self.last_phase[idx];
-            let delta = (cur_phase - last_phase) * self.factor;
+            let delta = (cur_phase - last_phase) / self.factor;
             self.delta_phase.push(delta);
         }
 
@@ -199,6 +219,10 @@ impl WindowedFft {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.input.clear();
+    }
+
     // Multiple the current input window by the Hanning filter and put the result in `self.windowed_input`.
     fn mult_window(&mut self) {
         assert!(self.input.len() >= WINDOW_SIZE);
@@ -253,6 +277,12 @@ impl PhaseVocoder {
             ana: Analysis::new(factor),
             syn: Synthesis::new(factor),
         }
+    }
+
+    pub fn reset(&mut self, factor: f32) {
+        self.wfft.reset();
+        self.ana.reset(factor);
+        self.syn.reset(factor);
     }
 
     pub fn samples_available(&self) -> usize {

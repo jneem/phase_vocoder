@@ -66,6 +66,14 @@ impl Synthesis {
         self.pos
     }
 
+    // A shortcut that just appends some bytes directly to the output. This is useful for
+    // just avoiding everything in the case factor = 1.0.
+    // This should not be used in conjunction with `advance`.
+    pub fn add_directly_to_output(&mut self, buf: &[i16]) {
+        self.output.extend(buf.iter().map(|&x| x as f32));
+        self.pos += buf.len();
+    }
+
     pub fn consume_output(&mut self, buf: &mut [i16]) {
         assert!(self.samples_available() >= buf.len());
         for x in buf.iter_mut() {
@@ -294,11 +302,15 @@ impl PhaseVocoder {
     }
 
     pub fn input(&mut self, buf: &[i16]) {
-        self.wfft.input(buf.iter().map(|&x| x as f32));
+        if self.ana.factor == 1.0 {
+            self.syn.add_directly_to_output(buf);
+        } else {
+            self.wfft.input(buf.iter().map(|&x| x as f32));
 
-        while self.wfft.advance() {
-            self.ana.advance(self.wfft.output());
-            self.syn.advance(self.ana.phase(), self.ana.magnitude());
+            while self.wfft.advance() {
+                self.ana.advance(self.wfft.output());
+                self.syn.advance(self.ana.phase(), self.ana.magnitude());
+            }
         }
     }
 }

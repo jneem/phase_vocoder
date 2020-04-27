@@ -76,6 +76,8 @@ impl Synthesis {
 
     pub fn consume_output(&mut self, buf: &mut [i16]) {
         assert!(self.samples_available() >= buf.len());
+        assert!(self.output.len() >= self.samples_available());
+
         for x in buf.iter_mut() {
             let sample = self.output.pop_front().unwrap();
             *x = sample.max(std::i16::MIN as f32).min(std::i16::MAX as f32) as i16;
@@ -280,6 +282,9 @@ pub struct PhaseVocoder {
 
 impl PhaseVocoder {
     pub fn new(factor: f32) -> PhaseVocoder {
+        assert!(factor >= 0.125);
+        assert!(factor <= 8.0);
+
         PhaseVocoder {
             wfft: WindowedFft::new(),
             ana: Analysis::new(factor),
@@ -288,6 +293,9 @@ impl PhaseVocoder {
     }
 
     pub fn reset(&mut self, factor: f32) {
+        assert!(factor >= 0.125);
+        assert!(factor <= 8.0);
+
         self.wfft.reset();
         self.ana.reset(factor);
         self.syn.reset(factor);

@@ -3,6 +3,10 @@ name = "phase_vocoder"
 version = "0.1.0"
 authors = ["Joe Neeman <joeneeman@gmail.com>"]
 edition = "2018"
+readme = "README.md"
+description = "A basic phase vocoder for audio speed shifting"
+license = "MIT"
+repository = "https://github.com/jneem/phase_vocoder"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
